@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pankkitili</title>
+  <style>
+    table {
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pankkitili</h1>
+  <div id="account-info"></div>
+  <h2>Historia</h2>
+  <table id="history-table">
+    <thead>
+      <tr>
+      </tr>
+    </thead>
+    <tbody id="history-body"></tbody>
+  </table>
+
+  <h2>Talleta rahaa</h2>
+  <form id="deposit-form">
+    <input type="number" id="deposit-amount" placeholder="Summa" required>
+    <button type="submit">Talleta</button>
+  </form>
+
+  <h2>Nosta rahaa</h2>
+  <form id="withdraw-form">
+    <input type="number" id="withdraw-amount" placeholder="Summa" required>
+    <button type="submit">Nosta</button>
+  </form>
+
+  <button id="show-info-button">Näytä tiedot</button>
+  <button id="show-history-button">Näytä historia</button>
+
+  <script>
+    class Pankkitili {
+      constructor(tilinumero) {
+        this.tilinumero = tilinumero;
+        this.saldo = 0;
+        this.historia = [];
+      }
+
+      talleta(summa) {
+        if (summa > 0) {
+          this.saldo += summa;
+          this.historia.push({
+            päivämäärä: new Date(),
+            tapahtuma: "Talletus",
+            summa: summa,
+            saldoEnnen: this.saldo - summa
+          });
+          console.log("Talletus suoritettu.");
+        } else {
+          console.log("Virhe: Talletettava summa tulee olla positiivinen.");
+        }
+      }
+
+      nosta(summa) {
+        if (summa > 0) {
+          if (summa <= this.saldo) {
+            this.saldo -= summa;
+            this.historia.push({
+              päivämäärä: new Date(),
+              tapahtuma: "Nosto",
+              summa: summa,
+              saldoEnnen: this.saldo + summa
+            });
+            console.log("Nosto suoritettu.");
+          } else {
+            console.log("Virhe: Tilillä ei ole tarpeeksi saldoa.");
+          }
+        } else {
+          console.log("Virhe: Nostettava summa tulee olla positiivinen.");
+        }
+      }
+
+      näytäTiedot() {
+        const accountInfo = document.getElementById("account-info");
+        accountInfo.innerHTML = `
+          <p>Tilinumero: ${this.tilinumero}</p>
+          <p>Saldo: ${this.saldo}</p>
+          <h3>Historia</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Päivämäärä</th>
+                <th>Tapahtuma</th>
+                <th>Summa</th>
+                <th>Saldo ennen tapahtumaa</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${this.historia
+                .map(
+                  tapahtuma => `
+                  <tr>
+                    <td>${tapahtuma.päivämäärä}</td>
+                    <td>${tapahtuma.tapahtuma}</td>
+                    <td>${tapahtuma.summa}</td>
+                    <td>${tapahtuma.saldoEnnen}</td>
+                  </tr>
+                `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
+      näytäHistoria() {
+        const historyBody = document.getElementById("history-body");
+        historyBody.innerHTML = "";
+        for (let tapahtuma of this.historia) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${tapahtuma.päivämäärä}</td>
+            <td>${tapahtuma.tapahtuma}</td>
+            <td>${tapahtuma.summa}</td>
+            <td>${tapahtuma.saldoEnnen}</td>
+          `;
+          historyBody.appendChild(row);
+        }
+      }
+    }
+
+    const pankkitili = new Pankkitili("FI1234567890");
+
+    const depositForm = document.getElementById("deposit-form");
+    const depositAmount = document.getElementById("deposit-amount");
+
+    depositForm.addEventListener("submit", function(event) {
+      event.preventDefault();
+      const amount = parseFloat(depositAmount.value);
+      pankkitili.talleta(amount);
+      pankkitili.näytäTiedot();
+      depositAmount.value = "";
+    });
+
+    const withdrawForm = document.getElementById("withdraw-form");
+    const withdrawAmount = document.getElementById("withdraw-amount");
+
+    withdrawForm.addEventListener("submit", function(event) {
+      event.preventDefault();
+      const amount = parseFloat(withdrawAmount.value);
+      pankkitili.nosta(amount);
+      pankkitili.näytäTiedot();
+      withdrawAmount.value = "";
+    });
+
+    const showInfoButton = document.getElementById("show-info-button");
+    showInfoButton.addEventListener("click", function() {
+      pankkitili.näytäTiedot();
+    });
+
+    const showHistoryButton = document.getElementById("show-history-button");
+    showHistoryButton.addEventListener("click", function() {
+      pankkitili.näytäHistoria();
+    });
+  </script>
+</body>
+</html>
